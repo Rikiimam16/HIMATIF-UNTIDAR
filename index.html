@@ -2882,8 +2882,8 @@
                 updateProgress();
             }
 
-            // Show / Hide Controls on user activity
-            function showControls() {
+            // Show / Hide Controls on user activity (YouTube-like experience)
+            function showControls(duration = 3500) {
                 container.classList.remove("hide-controls");
                 clearTimeout(hideControlsTimer);
                 if (!video.paused) {
@@ -2891,7 +2891,7 @@
                         if (!isScrubbing && !video.paused) {
                             container.classList.add("hide-controls");
                         }
-                    }, 2800);
+                    }, duration);
                 }
             }
 
@@ -2991,7 +2991,7 @@
             video.addEventListener("play", () => {
                 container.classList.add("is-playing");
                 container.classList.remove("is-paused");
-                showControls();
+                showControls(3500);
             });
 
             video.addEventListener("pause", () => {
@@ -3013,7 +3013,7 @@
                 container.classList.remove("hide-controls");
             });
 
-            // Tap/Click on Video Area: Toggle Controls (TIDAK langsung pause)
+            // Tap/Click on Video Area: Toggle Controls (seperti YouTube di mobile)
             container.addEventListener("click", (e) => {
                 // Jika klik berasal dari tombol kontrol atau timeline bar, biarkan event handler masing-masing
                 if (e.target.closest("button") || e.target.closest(".video-progress-container")) {
@@ -3021,7 +3021,7 @@
                 }
 
                 if (container.classList.contains("hide-controls")) {
-                    showControls();
+                    showControls(3500);
                 } else if (!video.paused) {
                     container.classList.add("hide-controls");
                 } else {
@@ -3034,31 +3034,32 @@
                 btnPlayCenter.addEventListener("click", (e) => {
                     e.stopPropagation();
                     togglePlay();
-                    showControls();
+                    showControls(3500);
                 });
             }
 
             btnPlayMini.addEventListener("click", (e) => {
                 e.stopPropagation();
                 togglePlay();
-                showControls();
+                showControls(3500);
             });
 
             btnMiniBack.addEventListener("click", (e) => {
                 e.stopPropagation();
                 skipTime(-10);
-                showControls();
+                showControls(3500);
             });
 
             btnMiniForward.addEventListener("click", (e) => {
                 e.stopPropagation();
                 skipTime(10);
-                showControls();
+                showControls(3500);
             });
 
             btnFullscreen.addEventListener("click", (e) => {
                 e.stopPropagation();
                 toggleFullscreen();
+                showControls(3500);
             });
 
             // Progress Bar Scrubbing (Mendukung Touch HP, Pointer & Mouse)
