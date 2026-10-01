@@ -2883,7 +2883,8 @@
             }
 
             // Show / Hide Controls on user activity (YouTube-like experience)
-            function showControls(duration = 3500) {
+            function showControls(customDuration) {
+                const duration = (typeof customDuration === "number" && !isNaN(customDuration)) ? customDuration : 4000;
                 container.classList.remove("hide-controls");
                 clearTimeout(hideControlsTimer);
                 if (!video.paused) {
@@ -2991,7 +2992,7 @@
             video.addEventListener("play", () => {
                 container.classList.add("is-playing");
                 container.classList.remove("is-paused");
-                showControls(3500);
+                showControls(4000);
             });
 
             video.addEventListener("pause", () => {
@@ -3013,7 +3014,7 @@
                 container.classList.remove("hide-controls");
             });
 
-            // Tap/Click on Video Area: Toggle Controls (seperti YouTube di mobile)
+            // Tap/Click on Video Area: Toggle Controls (TIDAK mem-pause video)
             container.addEventListener("click", (e) => {
                 // Jika klik berasal dari tombol kontrol atau timeline bar, biarkan event handler masing-masing
                 if (e.target.closest("button") || e.target.closest(".video-progress-container")) {
@@ -3021,11 +3022,11 @@
                 }
 
                 if (container.classList.contains("hide-controls")) {
-                    showControls(3500);
+                    showControls(4000);
                 } else if (!video.paused) {
                     container.classList.add("hide-controls");
                 } else {
-                    showControls();
+                    showControls(4000);
                 }
             });
 
@@ -3034,45 +3035,45 @@
                 btnPlayCenter.addEventListener("click", (e) => {
                     e.stopPropagation();
                     togglePlay();
-                    showControls(3500);
+                    showControls(4000);
                 });
             }
 
             btnPlayMini.addEventListener("click", (e) => {
                 e.stopPropagation();
                 togglePlay();
-                showControls(3500);
+                showControls(4000);
             });
 
             btnMiniBack.addEventListener("click", (e) => {
                 e.stopPropagation();
                 skipTime(-10);
-                showControls(3500);
+                showControls(4000);
             });
 
             btnMiniForward.addEventListener("click", (e) => {
                 e.stopPropagation();
                 skipTime(10);
-                showControls(3500);
+                showControls(4000);
             });
 
             btnFullscreen.addEventListener("click", (e) => {
                 e.stopPropagation();
                 toggleFullscreen();
-                showControls(3500);
+                showControls(4000);
             });
 
             // Progress Bar Scrubbing (Mendukung Touch HP, Pointer & Mouse)
             function startScrubbing(e) {
                 isScrubbing = true;
                 container.classList.add("is-scrubbing");
-                showControls();
+                showControls(4000);
                 setProgressFromEvent(e);
             }
 
             function moveScrubbing(e) {
                 if (!isScrubbing) return;
-                showControls();
+                showControls(4000);
                 setProgressFromEvent(e);
             }
 
@@ -3080,7 +3081,7 @@
                 if (isScrubbing) {
                     isScrubbing = false;
                     container.classList.remove("is-scrubbing");
-                    showControls();
+                    showControls(4000);
                 }
             }
 
@@ -3149,13 +3150,13 @@
             window.addEventListener("mouseup", endScrubbing);
 
             // Mouse Movement / Hover for showing/hiding controls
-            container.addEventListener("mousemove", showControls);
+            container.addEventListener("mousemove", () => showControls(4000));
             container.addEventListener("mouseleave", () => {
                 if (!video.paused) {
                     container.classList.add("hide-controls");
                 }
             });
-            container.addEventListener("touchstart", showControls, { passive: true });
+            container.addEventListener("touchstart", () => showControls(4000), { passive: true });
 
             // Keyboard Shortcuts (Space, Arrows, J, K, L, F, M)
             document.addEventListener("keydown", (e) => {
