@@ -2911,17 +2911,27 @@
                 }
             }
 
+            // Helper to get X position from Mouse, Touch, or Pointer Event
+            function getClientX(e) {
+                if (e.touches && e.touches.length > 0) return e.touches[0].clientX;
+                if (e.changedTouches && e.changedTouches.length > 0) return e.changedTouches[0].clientX;
+                if (typeof e.clientX === "number") return e.clientX;
+                return 0;
+            }
+
             // Set Video Position from Progress Container
             function setProgressFromEvent(e) {
                 const rect = progressContainer.getBoundingClientRect();
-                const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-                if (video.duration) {
+                if (!rect.width) return;
+                const clientX = getClientX(e);
+                const pos = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+                if (video.duration && !isNaN(video.duration)) {
                     video.currentTime = pos * video.duration;
                     updateProgress();
                 }
             }
 
-            // Toggle Fullscreen & Mobile Landscape Orientation
+            // Toggle Fullscreen (Natural orientation: portrait / landscape mengikuti posisi HP)
             async function toggleFullscreen() {
                 const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
 
@@ -2945,19 +2955,6 @@
                             return;
                         }
                     }
-
-                    // Auto-lock mobile to landscape mode when fullscreen
-                    try {
-                        if (screen.orientation && screen.orientation.lock) {
-                            screen.orientation.lock("landscape").catch(() => { });
-                        } else if (screen.lockOrientation) {
-                            screen.lockOrientation("landscape");
-                        } else if (screen.mozLockOrientation) {
-                            screen.mozLockOrientation("landscape");
-                        } else if (screen.msLockOrientation) {
-                            screen.msLockOrientation("landscape");
-                        }
-                    } catch (e) { }
                 } else {
                     try {
                         if (document.exitFullscreen) {
@@ -2976,21 +2973,6 @@
             function handleFullscreenChange() {
                 const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
                 container.classList.toggle("is-fullscreen", isFs);
-
-                // Auto-unlock orientation when exiting fullscreen
-                if (!isFs) {
-                    try {
-                        if (screen.orientation && screen.orientation.unlock) {
-                            screen.orientation.unlock();
-                        } else if (screen.unlockOrientation) {
-                            screen.unlockOrientation();
-                        } else if (screen.mozUnlockOrientation) {
-                            screen.mozUnlockOrientation();
-                        } else if (screen.msUnlockOrientation) {
-                            screen.msUnlockOrientation();
-                        }
-                    } catch (e) { }
-                }
             }
 
             document.addEventListener("fullscreenchange", handleFullscreenChange);
@@ -3031,32 +3013,47 @@
                 container.classList.remove("hide-controls");
             });
 
-            // Center Action Button & Direct Video Click to Play/Pause
+            // Tap/Click on Video Area: Toggle Controls (TIDAK langsung pause)
+            container.addEventListener("click", (e) => {
+                // Jika klik berasal dari tombol kontrol atau timeline bar, biarkan event handler masing-masing
+                if (e.target.closest("button") || e.target.closest(".video-progress-container")) {
+                    return;
+                }
+
+                if (container.classList.contains("hide-controls")) {
+                    showControls();
+                } else if (!video.paused) {
+                    container.classList.add("hide-controls");
+                } else {
+                    showControls();
+                }
+            });
+
+            // Center Action Button & Bottom Bar Buttons
             if (btnPlayCenter) {
                 btnPlayCenter.addEventListener("click", (e) => {
                     e.stopPropagation();
                     togglePlay();
+                    showControls();
                 });
             }
 
-            video.addEventListener("click", () => {
-                togglePlay();
-            });
-
-            // Bottom Bar Buttons
             btnPlayMini.addEventListener("click", (e) => {
                 e.stopPropagation();
                 togglePlay();
+                showControls();
             });
 
             btnMiniBack.addEventListener("click", (e) => {
                 e.stopPropagation();
                 skipTime(-10);
+                showControls();
             });
 
             btnMiniForward.addEventListener("click", (e) => {
                 e.stopPropagation();
                 skipTime(10);
+                showControls();
             });
 
             btnFullscreen.addEventListener("click", (e) => {
@@ -3064,29 +3061,93 @@
                 toggleFullscreen();
             });
 
-
-
-            // Progress Bar Scrubbing
-            progressContainer.addEventListener("mousedown", (e) => {
+            // Progress Bar Scrubbing (Mendukung Touch HP, Pointer & Mouse)
+            function startScrubbing(e) {
                 isScrubbing = true;
+                container.classList.add("is-scrubbing");
+                showControls();
                 setProgressFromEvent(e);
+            }
+
+            function moveScrubbing(e) {
+                if (!isScrubbing) return;
+                showControls();
+                setProgressFromEvent(e);
+            }
+
+            function endScrubbing(e) {
+                if (isScrubbing) {
+                    isScrubbing = false;
+                    container.classList.remove("is-scrubbing");
+                    showControls();
+                }
+            }
+
+            // Pointer Events (Touchscreen & Mouse Modern)
+            progressContainer.addEventListener("pointerdown", (e) => {
+                e.stopPropagation();
+                try {
+                    progressContainer.setPointerCapture(e.pointerId);
+                } catch (err) { }
+                startScrubbing(e);
+            });
+
+            progressContainer.addEventListener("pointermove", (e) => {
+                if (isScrubbing) {
+                    e.stopPropagation();
+                    moveScrubbing(e);
+                }
+            });
+
+            progressContainer.addEventListener("pointerup", (e) => {
+                if (isScrubbing) {
+                    e.stopPropagation();
+                    try {
+                        progressContainer.releasePointerCapture(e.pointerId);
+                    } catch (err) { }
+                    endScrubbing(e);
+                }
+            });
+
+            progressContainer.addEventListener("pointercancel", (e) => {
+                if (isScrubbing) {
+                    try {
+                        progressContainer.releasePointerCapture(e.pointerId);
+                    } catch (err) { }
+                    endScrubbing(e);
+                }
+            });
+
+            // Fallback Touch Events untuk HP
+            progressContainer.addEventListener("touchstart", (e) => {
+                e.stopPropagation();
+                startScrubbing(e);
+            }, { passive: true });
+
+            window.addEventListener("touchmove", (e) => {
+                if (isScrubbing) {
+                    moveScrubbing(e);
+                }
+            }, { passive: true });
+
+            window.addEventListener("touchend", endScrubbing);
+            window.addEventListener("touchcancel", endScrubbing);
+
+            // Fallback Mouse Events
+            progressContainer.addEventListener("mousedown", (e) => {
+                e.stopPropagation();
+                startScrubbing(e);
             });
 
             window.addEventListener("mousemove", (e) => {
                 if (isScrubbing) {
-                    setProgressFromEvent(e);
+                    moveScrubbing(e);
                 }
             });
 
-            window.addEventListener("mouseup", () => {
-                if (isScrubbing) {
-                    isScrubbing = false;
-                }
-            });
+            window.addEventListener("mouseup", endScrubbing);
 
-            progressContainer.addEventListener("click", setProgressFromEvent);
-
-            // Mouse Movement for showing/hiding controls
+            // Mouse Movement / Hover for showing/hiding controls
             container.addEventListener("mousemove", showControls);
             container.addEventListener("mouseleave", () => {
                 if (!video.paused) {
