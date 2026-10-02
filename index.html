@@ -398,38 +398,20 @@
                                 Browser Anda tidak mendukung video.
                             </video>
 
-                            <!-- Center Action Overlay (YouTube-like Navigation Controls) -->
+                            <!-- Center Action Overlay (Clean Play / Pause Button Only) -->
                             <div class="video-overlay" id="videoOverlay">
                                 <div class="video-controls-center">
-                                    <button type="button" class="btn-video-action btn-skip-side" id="btnCenterBack"
-                                        title="Mundur 10 detik" aria-label="Mundur 10 detik">
-                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                                            <path d="M3 3v5h5" />
-                                        </svg>
-                                        <span class="skip-label">10</span>
-                                    </button>
-
                                     <button type="button" class="btn-video-action btn-play-main" id="btnPlayCenter"
                                         title="Putar / Jeda (Spasi)" aria-label="Putar atau Jeda Video">
-                                        <svg class="icon-play" width="34" height="34" viewBox="0 0 24 24"
+                                        <svg class="icon-play" width="36" height="36" viewBox="0 0 24 24"
                                             fill="currentColor">
                                             <polygon points="6 3 20 12 6 21 6 3"></polygon>
                                         </svg>
-                                        <svg class="icon-pause" width="34" height="34" viewBox="0 0 24 24"
+                                        <svg class="icon-pause" width="36" height="36" viewBox="0 0 24 24"
                                             fill="currentColor">
                                             <rect x="6" y="4" width="4" height="16" rx="1"></rect>
                                             <rect x="14" y="4" width="4" height="16" rx="1"></rect>
                                         </svg>
-                                    </button>
-
-                                    <button type="button" class="btn-video-action btn-skip-side" id="btnCenterForward"
-                                        title="Maju 10 detik" aria-label="Maju 10 detik">
-                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-                                            <path d="M21 3v5h-5" />
-                                        </svg>
-                                        <span class="skip-label">10</span>
                                     </button>
                                 </div>
                             </div>
@@ -2945,8 +2927,6 @@
             if (!container || !video) return;
 
             const btnPlayCenter = document.getElementById("btnPlayCenter");
-            const btnCenterBack = document.getElementById("btnCenterBack");
-            const btnCenterForward = document.getElementById("btnCenterForward");
             const btnPlayMini = document.getElementById("btnPlayMini");
             const btnMiniBack = document.getElementById("btnMiniBack");
             const btnMiniForward = document.getElementById("btnMiniForward");
@@ -2992,9 +2972,9 @@
                 updateProgress();
             }
 
-            // Show / Hide Controls on user activity (YouTube-like experience: 2.5s)
+            // Show / Hide Controls on user activity (YouTube-like experience)
             function showControls(customDuration) {
-                const duration = (typeof customDuration === "number" && !isNaN(customDuration)) ? customDuration : 2500;
+                const duration = (typeof customDuration === "number" && !isNaN(customDuration)) ? customDuration : 4000;
                 container.classList.remove("hide-controls");
                 clearTimeout(hideControlsTimer);
                 if (!video.paused) {
@@ -3003,13 +2983,6 @@
                             container.classList.add("hide-controls");
                         }
                     }, duration);
-                }
-            }
-
-            function hideControls() {
-                if (!video.paused) {
-                    clearTimeout(hideControlsTimer);
-                    container.classList.add("hide-controls");
                 }
             }
 
@@ -3109,7 +3082,7 @@
             video.addEventListener("play", () => {
                 container.classList.add("is-playing");
                 container.classList.remove("is-paused");
-                showControls(2500);
+                showControls(4000);
             });
 
             video.addEventListener("pause", () => {
@@ -3131,7 +3104,7 @@
                 container.classList.remove("hide-controls");
             });
 
-            // Tap/Click on Video Area: Toggle Controls (YouTube-like behaviour)
+            // Tap/Click on Video Area: Toggle Controls (TIDAK mem-pause video)
             container.addEventListener("click", (e) => {
                 // Jika klik berasal dari tombol kontrol atau timeline bar, biarkan event handler masing-masing
                 if (e.target.closest("button") || e.target.closest(".video-progress-container")) {
@@ -3139,11 +3112,11 @@
                 }
 
                 if (container.classList.contains("hide-controls")) {
-                    showControls(2500);
+                    showControls(4000);
                 } else if (!video.paused) {
-                    hideControls();
+                    container.classList.add("hide-controls");
                 } else {
-                    showControls(2500);
+                    showControls(4000);
                 }
             });
 
@@ -3152,61 +3125,45 @@
                 btnPlayCenter.addEventListener("click", (e) => {
                     e.stopPropagation();
                     togglePlay();
-                    showControls(2500);
-                });
-            }
-
-            if (btnCenterBack) {
-                btnCenterBack.addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    skipTime(-10);
-                    showControls(2500);
-                });
-            }
-
-            if (btnCenterForward) {
-                btnCenterForward.addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    skipTime(10);
-                    showControls(2500);
+                    showControls(4000);
                 });
             }
 
             btnPlayMini.addEventListener("click", (e) => {
                 e.stopPropagation();
                 togglePlay();
-                showControls(2500);
+                showControls(4000);
             });
 
             btnMiniBack.addEventListener("click", (e) => {
                 e.stopPropagation();
                 skipTime(-10);
-                showControls(2500);
+                showControls(4000);
             });
 
             btnMiniForward.addEventListener("click", (e) => {
                 e.stopPropagation();
                 skipTime(10);
-                showControls(2500);
+                showControls(4000);
             });
 
             btnFullscreen.addEventListener("click", (e) => {
                 e.stopPropagation();
                 toggleFullscreen();
-                showControls(2500);
+                showControls(4000);
             });
 
             // Progress Bar Scrubbing (Mendukung Touch HP, Pointer & Mouse)
             function startScrubbing(e) {
                 isScrubbing = true;
                 container.classList.add("is-scrubbing");
-                showControls(2500);
+                showControls(4000);
                 setProgressFromEvent(e);
             }
 
             function moveScrubbing(e) {
                 if (!isScrubbing) return;
-                showControls(2500);
+                showControls(4000);
                 setProgressFromEvent(e);
             }
 
@@ -3214,7 +3171,7 @@
                 if (isScrubbing) {
                     isScrubbing = false;
                     container.classList.remove("is-scrubbing");
-                    showControls(2500);
+                    showControls(4000);
                 }
             }
 
