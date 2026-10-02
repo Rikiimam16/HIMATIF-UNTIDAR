@@ -2945,6 +2945,8 @@
             if (!container || !video) return;
 
             const btnPlayCenter = document.getElementById("btnPlayCenter");
+            const btnCenterBack = document.getElementById("btnCenterBack");
+            const btnCenterForward = document.getElementById("btnCenterForward");
             const btnPlayMini = document.getElementById("btnPlayMini");
             const btnMiniBack = document.getElementById("btnMiniBack");
             const btnMiniForward = document.getElementById("btnMiniForward");
@@ -2990,9 +2992,9 @@
                 updateProgress();
             }
 
-            // Show / Hide Controls on user activity (YouTube-like experience)
+            // Show / Hide Controls on user activity (YouTube-like experience: 2.5s)
             function showControls(customDuration) {
-                const duration = (typeof customDuration === "number" && !isNaN(customDuration)) ? customDuration : 4000;
+                const duration = (typeof customDuration === "number" && !isNaN(customDuration)) ? customDuration : 2500;
                 container.classList.remove("hide-controls");
                 clearTimeout(hideControlsTimer);
                 if (!video.paused) {
@@ -3001,6 +3003,13 @@
                             container.classList.add("hide-controls");
                         }
                     }, duration);
+                }
+            }
+
+            function hideControls() {
+                if (!video.paused) {
+                    clearTimeout(hideControlsTimer);
+                    container.classList.add("hide-controls");
                 }
             }
 
@@ -3100,7 +3109,7 @@
             video.addEventListener("play", () => {
                 container.classList.add("is-playing");
                 container.classList.remove("is-paused");
-                showControls(4000);
+                showControls(2500);
             });
 
             video.addEventListener("pause", () => {
@@ -3122,7 +3131,7 @@
                 container.classList.remove("hide-controls");
             });
 
-            // Tap/Click on Video Area: Toggle Controls (TIDAK mem-pause video)
+            // Tap/Click on Video Area: Toggle Controls (YouTube-like behaviour)
             container.addEventListener("click", (e) => {
                 // Jika klik berasal dari tombol kontrol atau timeline bar, biarkan event handler masing-masing
                 if (e.target.closest("button") || e.target.closest(".video-progress-container")) {
@@ -3130,11 +3139,11 @@
                 }
 
                 if (container.classList.contains("hide-controls")) {
-                    showControls(4000);
+                    showControls(2500);
                 } else if (!video.paused) {
-                    container.classList.add("hide-controls");
+                    hideControls();
                 } else {
-                    showControls(4000);
+                    showControls(2500);
                 }
             });
 
@@ -3143,45 +3152,61 @@
                 btnPlayCenter.addEventListener("click", (e) => {
                     e.stopPropagation();
                     togglePlay();
-                    showControls(4000);
+                    showControls(2500);
+                });
+            }
+
+            if (btnCenterBack) {
+                btnCenterBack.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    skipTime(-10);
+                    showControls(2500);
+                });
+            }
+
+            if (btnCenterForward) {
+                btnCenterForward.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    skipTime(10);
+                    showControls(2500);
                 });
             }
 
             btnPlayMini.addEventListener("click", (e) => {
                 e.stopPropagation();
                 togglePlay();
-                showControls(4000);
+                showControls(2500);
             });
 
             btnMiniBack.addEventListener("click", (e) => {
                 e.stopPropagation();
                 skipTime(-10);
-                showControls(4000);
+                showControls(2500);
             });
 
             btnMiniForward.addEventListener("click", (e) => {
                 e.stopPropagation();
                 skipTime(10);
-                showControls(4000);
+                showControls(2500);
             });
 
             btnFullscreen.addEventListener("click", (e) => {
                 e.stopPropagation();
                 toggleFullscreen();
-                showControls(4000);
+                showControls(2500);
             });
 
             // Progress Bar Scrubbing (Mendukung Touch HP, Pointer & Mouse)
             function startScrubbing(e) {
                 isScrubbing = true;
                 container.classList.add("is-scrubbing");
-                showControls(4000);
+                showControls(2500);
                 setProgressFromEvent(e);
             }
 
             function moveScrubbing(e) {
                 if (!isScrubbing) return;
-                showControls(4000);
+                showControls(2500);
                 setProgressFromEvent(e);
             }
 
@@ -3189,7 +3214,7 @@
                 if (isScrubbing) {
                     isScrubbing = false;
                     container.classList.remove("is-scrubbing");
-                    showControls(4000);
+                    showControls(2500);
                 }
             }
 
